@@ -1,6 +1,10 @@
 package main
 
 import (
+	"log"
+	"net/http"
+
+	"github.com/girishkoundinya/SAC_Server/router"
 	"github.com/spf13/cobra"
 )
 
@@ -21,5 +25,6 @@ func main() {
 }
 
 func startServer() {
-
+	router := router.InitRouter()
+	log.Fatal(http.ListenAndServe(":3006", router))
 }
