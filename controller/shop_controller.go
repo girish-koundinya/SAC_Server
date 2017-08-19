@@ -16,7 +16,7 @@ func ShopCreate(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 func ShopDetail(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 	shopID := ps.ByName("shopid")
-	fmt.Fprintf(w, "ShopCreate, %s!\n", shopID)
+	fmt.Fprintf(w, "ShopDetail, %s!\n", shopID)
 }
 
 func ProductCreate(w http.ResponseWriter, r *http.Request, _ httprouter.Param) {
