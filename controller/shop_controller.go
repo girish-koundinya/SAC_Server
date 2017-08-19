@@ -25,11 +25,12 @@ func ShopDetail(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 }
 
 type Shop struct {
-	Id        int     `json:"id"`
+	ID        int     `json:"id"`
 	Name      string  `json:"name"`
 	Phone     string  `json:"phone"`
 	Latitude  float32 `json:"latitude"`
 	Longitude float32 `json:"longitude"`
+	Address   string  `json:"address"`
 }
 
 var shops []Shop
@@ -37,11 +38,11 @@ var shops []Shop
 func fetchShopDetail(id string) []Shop {
 	DB, err := database.GetDatabase()
 	checkError(err)
-	rows, err := DB.Query("SELECT id,name,phone,latitude,longitude FROM shops WHERE id = $1", id)
+	rows, err := DB.Query("SELECT id,name,phone,latitude,longitude,address FROM shops WHERE id = $1", id)
 	checkError(err)
 	var shop Shop
 	for rows.Next() {
-		switch err := rows.Scan(&shop.Id, &shop.Name, &shop.Phone, &shop.Latitude, &shop.Longitude); err {
+		switch err := rows.Scan(&shop.ID, &shop.Name, &shop.Phone, &shop.Latitude, &shop.Longitude, &shop.Address); err {
 		case sql.ErrNoRows:
 			fmt.Println("No rows were returned!")
 		case nil:
