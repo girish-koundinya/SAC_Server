@@ -1,0 +1,8 @@
+version: '2'
+services:
+  pq-server:
+    image: timescale/timescaledb-postgis:0.2.0
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./docker/pq-server/data:/var/lib/postgresql/data
