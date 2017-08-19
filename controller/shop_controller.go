@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/girishkoundinya/SAC_Server/database"
 	"github.com/julienschmidt/httprouter"
@@ -15,7 +16,6 @@ func ShopCreate(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	//CREATE SHOP
 	//CHECK IF TAG EXISTS
 	//IF DOESN'T EXIST ADD TO TAG AND AND TO SHOP TAG LINK
-
 	r.ParseForm()
 	name := r.Form.Get("name")
 	description := r.Form.Get("description")
@@ -25,21 +25,43 @@ func ShopCreate(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	categoryID := r.Form.Get("category_id")
 	lat := r.Form.Get("latitude")
 	long := r.Form.Get("longitude")
-	shop := createShop(name, description, phone, owner, address, categoryID, lat, long)
+	tags := r.Form.Get("tags")
+	shopID := createShop(name, description, phone, owner, address, categoryID, lat, long)
+	insertTags(tags, shopID, categoryID)
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(FormResponse("Success", 200, shop))
+	w.Write(FormResponse("Success", 200, shopID))
 }
 
-func createShop(name, description, phone, owner, address, categoryID, lat, long string) *Shop {
-	queryString := fmt.Sprintf(`INSERT INTO shops(name, description, phone, owner, address, category_id, latitude, longitude, location_geom) VALUES('%s','%s','%s','%s','%s','%s',%s,%s,ST_TRANSFORM(ST_SetSRID(ST_MakePoint(%s,%s),4326),2163));`, name, description, phone, owner, address, categoryID, lat, long, lat, long)
-	row := database.DB.QueryRow(queryString)
-	var shop Shop
-	err := row.Scan(&shop.ID, &shop.Name, &shop.Phone, &shop.Latitude, &shop.Longitude, &shop.Address)
-	log.Println(shop)
-	if err != nil {
-		return nil
+func insertTags(tags string, shopid int, categoryID string) {
+	tagArr := strings.Split(tags, ",")
+	for _, element := range tagArr {
+		log.Println(element)
+		query := fmt.Sprintf("SELECT id from tags where lower(name) like '%s';", element)
+		log.Println(query)
+		rows, err := database.DB.Query(query)
+		checkError(err)
+		log.Println("*")
+		log.Println(rows)
+		if !rows.Next() {
+			insertTag(element, shopid, categoryID)
+		}
 	}
-	return &shop
+}
+
+func insertTag(element string, shopid int, categoryID string) {
+	queryString := fmt.Sprintf("INSERT INTO tags(name, category_id) VALUES('%s', %s)", element, categoryID)
+	var id int
+	database.DB.QueryRow(queryString).Scan(&id)
+	queryString = fmt.Sprintf("INSERT INTO shop_tags VALUES(%d, %d);", id, shopid)
+	var relationShipID int
+	database.DB.QueryRow(queryString).Scan(&relationShipID)
+}
+
+func createShop(name, description, phone, owner, address, categoryID, lat, long string) int {
+	queryString := fmt.Sprintf(`INSERT INTO shops(name, description, phone, owner, address, category_id, latitude, longitude, location_geom) VALUES('%s','%s','%s','%s','%s','%s',%s,%s,ST_TRANSFORM(ST_SetSRID(ST_MakePoint(%s,%s),4326),2163)) RETURNING id;`, name, description, phone, owner, address, categoryID, lat, long, lat, long)
+	var id int
+	database.DB.QueryRow(queryString).Scan(&id)
+	return id
 }
 
 func ShopUpdate(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
