@@ -6,3 +6,15 @@ services:
       - "5432:5432"
     volumes:
       - ./docker/pq-server/data:/var/lib/postgresql/data
+  go-server:
+    build:
+      context: .
+      dockerfile: ./docker/go-server/Dockerfile
+    command: ./docker/go-server/run.sh
+    ports:
+      - "3006:3006"
+    depends_on:
+      - pq-server
+    volumes:
+      - .:/src/SAC_server
+      - .:/go/src/github.com/girishkoundinya/SAC_Server/

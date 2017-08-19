@@ -14,3 +14,4 @@
 .glide/
 
 docker/*/data/*
+SAC_server
