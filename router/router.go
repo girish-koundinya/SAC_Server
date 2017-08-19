@@ -1,7 +1,9 @@
 package router
 
-import "github.com/julienschmidt/httprouter"
-import "gitlab.com/shoparoundthecorner_backend/controller"
+import (
+	"github.com/girishkoundinya/SAC_Server/controller"
+	"github.com/julienschmidt/httprouter"
+)
 
 func InitRouter() *httprouter.Router {
 	router := httprouter.New()
