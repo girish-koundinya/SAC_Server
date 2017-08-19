@@ -8,5 +8,5 @@ import (
 )
 
 func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	fmt.Fprint(w, "Welcome!\n")
+	fmt.Fprint(w, "Welcome to the shop around the corner!\n")
 }
