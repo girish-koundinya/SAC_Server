@@ -19,6 +19,6 @@ func mapRoutes(router *httprouter.Router) {
 	router.GET("/shop/:shopid", controller.ShopDetail)
 	router.GET("/shop/:shopid/product/:productid", controller.ProductDetail)
 
-	router.PUT("/shop/:shopid", controller.ShopUpdate)
+	router.POST("/shop/:shopid", controller.AddTag)
 	router.POST("/shop", controller.ShopCreate)
 }

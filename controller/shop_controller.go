@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/girishkoundinya/SAC_Server/database"
@@ -64,8 +65,15 @@ func createShop(name, description, phone, owner, address, categoryID, lat, long 
 	return id
 }
 
-func ShopUpdate(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	fmt.Fprint(w, "ShopUpdate")
+func AddTag(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	r.ParseForm()
+	tags := r.Form.Get("tags")
+	categoryID := r.Form.Get("category_id")
+	shopID := ps.ByName("shopid")
+	shopInt, _ := strconv.Atoi(shopID)
+	insertTags(tags, shopInt, categoryID)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(FormResponse("Success", 200, nil))
 }
 
 func ShopDetail(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
