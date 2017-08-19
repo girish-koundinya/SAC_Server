@@ -19,6 +19,6 @@ func getDatabase() (*sql.DB, error) {
 }
 func checkError(err error) {
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 }

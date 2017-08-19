@@ -16,7 +16,7 @@ func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 func checkError(err error) {
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 }
 
@@ -30,7 +30,7 @@ func FormResponse(message string, code int, results interface{}) []byte {
 	response := ResponseStruct{Message: message, Code: code, Results: results}
 	jData, err := json.Marshal(response)
 	if err != nil {
-		panic(err)
+		log.Println(err)
 	}
 	return jData
 }
