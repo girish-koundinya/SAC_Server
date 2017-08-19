@@ -86,7 +86,7 @@ func searchShops(tags string, latitude string, longitude string) []Shop {
 	var shops []Shop
 
 	for rows.Next() {
-		switch err := rows.Scan(&shop.ID, &shop.Name, &shop.Phone, &shop.Latitude, &shop.Longitude, &shop.Address); err {
+		switch err := rows.Scan(&shop.ID, &shop.Name, &shop.Phone, &shop.Latitude, &shop.Longitude, &shop.Address, &shop.CategoryID); err {
 		case sql.ErrNoRows:
 			fmt.Println("No rows were returned!")
 		case nil:
