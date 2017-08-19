@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"strconv"
 
 	"database/sql"
 	"github.com/girishkoundinya/SAC_Server/database"
@@ -37,6 +38,34 @@ func SearchSuggestions(w http.ResponseWriter, r *http.Request, key httprouter.Pa
 		w.Write(FormResponse("Success", 200, result))
 	} else {
 		w.Write(FormResponse("No tags found :(", 404, result))
+	}
+}
+
+// http://localhost:3006/search_chrome_extension?search_text=Tea&latitude=12.969&longitude=80.24865
+func SearchChromeExtension(w http.ResponseWriter, r *http.Request, key httprouter.Params) {
+	queryValues := r.URL.Query()
+	searchText := queryValues.Get("search_text")
+
+	w.Header().Set("Content-Type", "application/json")
+	result := searchTag(searchText)
+	if len(result) > 0 {
+		tags := ""
+		for _, tag := range result {
+			tags = tags + strconv.Itoa(tag.ID) + ","
+		}
+		tags = tags[:len(tags)-1]
+
+		latitude := queryValues.Get("latitude")
+		longitude := queryValues.Get("longitude")
+		w.Header().Set("Content-Type", "application/json")
+		result := searchShops(tags, latitude, longitude)
+		if len(result) > 0 {
+			w.Write(FormResponse("Success", 200, result))
+		} else {
+			w.Write(FormResponse("Unable to find '" + searchText + "' near you", 404, result))
+		}
+	} else {
+		w.Write(FormResponse("Unable to find '" + searchText + "' near you", 404, result))
 	}
 }
 
