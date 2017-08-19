@@ -7,10 +7,10 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-func Search(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func Search(w http.ResponseWriter, r *http.Request, key httprouter.Params) {
 	fmt.Fprint(w, "Search!\n")
 }
 
-func SearchSuggestions(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func SearchSuggestions(w http.ResponseWriter, r *http.Request, key httprouter.Params) {
 	fmt.Fprint(w, "SearchSuggestions!\n")
 }
