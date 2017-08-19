@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/girishkoundinya/SAC_Server/database"
 	"github.com/julienschmidt/httprouter"
@@ -79,57 +80,49 @@ func AddTag(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 func ShopDetail(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	shopID := ps.ByName("shopid")
 	result := fetchShopDetail(shopID)
-	if len(result) > 0 {
-		log.Println("*****")
-		log.Println(fetchTrends(result))
-		copy(result[0].Trends, fetchTrends(result))
-	}
-	log.Println(result)
+
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(FormResponse("Success", 200, result))
+
+	jsonResponse := []struct{
+		ShopDetails Shop `json:"shop"`
+		Trends 			[]Trend `json:"trends"`
+	}{
+		{result[0], fetchTrends(result[0])} }
+	w.Write(FormResponse("Success", 200, jsonResponse))
 }
 
-func fetchTrends(result []Shop) []Trend {
-	shop := result[0]
-	query := fmt.Sprintf("select tag_id, count(*) from search_requests where request_time > '2017-08-19 00:00:00' and request_time < '2017-08-19 23:59:59' and tag_id in (select tag_id from shop_tags where shop_id = %d) group by tag_id order by count(*) desc limit 10;", shop.ID)
-	var trends []Trend
+func fetchTrends(shop Shop) []Trend {
+	yday_date := time.Now().Local().Add(-24*time.Hour).Format("2006-01-02")
+	where_conditions := `request_time > '` + yday_date + ` 00:00:00' and request_time < '` + yday_date + ` 23:59:59' and tag_id in (select tag_id from shop_tags where shop_id = ` + strconv.Itoa(shop.ID) + `)`
+	aggr_query := `select tag_id, count(*) AS "tag_count" from search_requests where ` + where_conditions + ` group by tag_id order by count(*) desc limit 10`
+
+	query := `select tags.name, aggr.tag_count from (` + aggr_query + `) AS aggr join tags on aggr.tag_id = tags.id order by aggr.tag_count desc`
+	fmt.Println(query);
+
 	rows, err := database.DB.Query(query)
 	checkError(err)
+
+	var trends []Trend
+	var trend Trend
+
 	for rows.Next() {
-		var tagID, count int
-		switch err := rows.Scan(&tagID, &count); err {
+		switch err := rows.Scan(&trend.TagName, &trend.Count); err {
 		case sql.ErrNoRows:
 			fmt.Println("No rows were returned!")
 		case nil:
-			var trend Trend
-			tag := getTag(tagID)
-			trend.tag = tag
-			trend.count = count
 			trends = append(trends, trend)
 		default:
 			checkError(err)
 		}
 
 	}
+
 	return trends
 }
 
-func getTag(tagid int) *Tag {
-	query := fmt.Sprintf("select id, name from tags where id = %d", tagid)
-	rows, err := database.DB.Query(query)
-	checkError(err)
-	var tag Tag
-	for rows.Next() {
-		err := rows.Scan(&tag.ID, &tag.Name)
-		checkError(err)
-		return &tag
-	}
-	return nil
-}
-
 type Trend struct {
-	tag   *Tag `json:"tag"`
-	count int  `json:"count"`
+	TagName   string `json:"tag_name"`
+	Count 		int  `json:"count"`
 }
 
 type Shop struct {
@@ -139,7 +132,6 @@ type Shop struct {
 	Latitude  float32 `json:"latitude"`
 	Longitude float32 `json:"longitude"`
 	Address   string  `json:"address"`
-	Trends    []Trend `json:"trend"`
 }
 
 var shops []Shop
