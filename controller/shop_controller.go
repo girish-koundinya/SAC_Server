@@ -79,8 +79,57 @@ func AddTag(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 func ShopDetail(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	shopID := ps.ByName("shopid")
 	result := fetchShopDetail(shopID)
+	if len(result) > 0 {
+		log.Println("*****")
+		log.Println(fetchTrends(result))
+		copy(result[0].Trends, fetchTrends(result))
+	}
+	log.Println(result)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(FormResponse("Success", 200, result))
+}
+
+func fetchTrends(result []Shop) []Trend {
+	shop := result[0]
+	query := fmt.Sprintf("select tag_id, count(*) from search_requests where request_time > '2017-08-19 00:00:00' and request_time < '2017-08-19 23:59:59' and tag_id in (select tag_id from shop_tags where shop_id = %d) group by tag_id order by count(*) desc limit 10;", shop.ID)
+	var trends []Trend
+	rows, err := database.DB.Query(query)
+	checkError(err)
+	for rows.Next() {
+		var tagID, count int
+		switch err := rows.Scan(&tagID, &count); err {
+		case sql.ErrNoRows:
+			fmt.Println("No rows were returned!")
+		case nil:
+			var trend Trend
+			tag := getTag(tagID)
+			trend.tag = tag
+			trend.count = count
+			trends = append(trends, trend)
+		default:
+			checkError(err)
+		}
+
+	}
+	return trends
+}
+
+func getTag(tagid int) *Tag {
+	query := fmt.Sprintf("select id, name from tags where id = %d", tagid)
+	rows, err := database.DB.Query(query)
+	checkError(err)
+	var tag Tag
+	for rows.Next() {
+		err := rows.Scan(&tag.ID, &tag.Name)
+		checkError(err)
+		return &tag
+	}
+	return nil
+}
+
+type Trend struct {
+	tag   *Tag `json:"tag"`
+	count int  `json:"count"`
 }
 
 type Shop struct {
@@ -90,6 +139,7 @@ type Shop struct {
 	Latitude  float32 `json:"latitude"`
 	Longitude float32 `json:"longitude"`
 	Address   string  `json:"address"`
+	Trends    []Trend `json:"trend"`
 }
 
 var shops []Shop
@@ -112,8 +162,8 @@ func fetchShopDetail(id string) []Shop {
 }
 
 func ProductCreate(w http.ResponseWriter, r *http.Request, _ httprouter.Param) {
-
 	fmt.Fprint(w, "Product create!\n")
+
 }
 
 func ProductDetail(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
