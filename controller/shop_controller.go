@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/girishkoundinya/SAC_Server/database"
-
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -36,9 +35,7 @@ type Shop struct {
 var shops []Shop
 
 func fetchShopDetail(id string) []Shop {
-	DB, err := database.GetDatabase()
-	checkError(err)
-	rows, err := DB.Query("SELECT id,name,phone,latitude,longitude,address FROM shops WHERE id = $1", id)
+	rows, err := database.DB.Query("SELECT id,name,phone,latitude,longitude,address FROM shops WHERE id = $1", id)
 	checkError(err)
 	var shop Shop
 	for rows.Next() {
