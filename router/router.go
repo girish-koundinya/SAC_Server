@@ -17,4 +17,7 @@ func mapRoutes(router *httprouter.Router) {
 	router.GET("/search_suggest", controller.SearchSuggestions)
 	router.GET("/shop/:shopid", controller.ShopDetail)
 	router.GET("/shop/:shopid/product/:productid", controller.ProductDetail)
+
+	router.PUT("/shop/:shopid", controller.ShopUpdate)
+	router.POST("/shop", controller.ShopCreate)
 }
