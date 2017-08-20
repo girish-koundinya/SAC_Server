@@ -211,6 +211,37 @@ func ProductCreate(w http.ResponseWriter, r *http.Request, _ httprouter.Param) {
 func ProductDetail(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 	productID := ps.ByName("productid")
-	fmt.Fprintf(w, "ProductDetail, %s!\n", productID)
 
+	result := fetchTagTrend(productID);
+
+	w.Header().Set("Content-Type", "application/json")
+	if len(result) > 0 {
+		w.Write(FormResponse("Success", 200, result))
+	} else {
+		w.Write(FormResponse("No trend found :(", 404, result))
+	}
+}
+
+func fetchTagTrend(tagId string) []Trend {
+	yday_date := time.Now().Local().Add(-24*time.Hour).Format("2006-01-02")
+	where_conditions := `request_time > '` + yday_date + ` 00:00:00' and request_time < '` + yday_date + ` 23:59:59' and tag_id = ` + tagId
+	query := `SELECT time_bucket('15 minute', request_time) AS time_group, count(*) FROM search_requests WHERE ` + where_conditions + ` GROUP BY time_group ORDER BY time_group ASC`
+	rows, err := database.DB.Query(query)
+	checkError(err)
+
+	var trends []Trend
+	var trend Trend
+
+	for rows.Next() {
+		switch err := rows.Scan(&trend.TagName, &trend.Count); err {
+		case sql.ErrNoRows:
+			fmt.Println("No rows were returned!")
+		case nil:
+			trends = append(trends, trend)
+		default:
+			checkError(err)
+		}
+	}
+
+	return trends
 }
